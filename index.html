@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz RBT Tingkatan 1: Bab 2 Pengurusan Projek Reka Bentuk</title>
+    <style>
+        :root {
+            --primary: #E67E22;
+            --secondary: #2980B9;
+            --correct: #2ECC71;
+            --wrong: #E74C3C;
+            --dark: #2C3E50;
+            --light: #FEF9E7;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background: linear-gradient(135deg, #fceabb 0%, #f8b500 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 15px; }
+        .quiz-card { background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 100%; max-width: 650px; padding: 25px; overflow: hidden; }
+
+        /* Skrin Mula */
+        .start-screen { text-align: center; }
+        .start-screen h1 { color: var(--dark); margin-bottom: 10px; font-size: 1.6rem; }
+        .start-screen p { color: #555; margin-bottom: 20px; font-size: 0.95rem; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--dark); }
+        .input-group input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; }
+        .input-group input:focus { border-color: var(--primary); }
+
+        /* Skrin Kuiz */
+        .header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; color: var(--dark); }
+        .timer { background: #ffeaa7; padding: 6px 12px; border-radius: 20px; color: #d63031; font-size: 0.9rem; }
+
+        .progress-container { background: #e0e0e0; height: 10px; border-radius: 5px; margin-bottom: 20px; overflow: hidden; }
+        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s ease; }
+
+        .question-text { font-size: 1.1rem; color: var(--dark); margin-bottom: 20px; line-height: 1.4; font-weight: 600; }
+
+        /* Pilihan Jawapan Objektif & Dropdown */
+        .options-grid { display: grid; gap: 10px; margin-bottom: 15px; }
+        .option-btn { background: var(--light); border: 2px solid #f9e79f; border-radius: 12px; padding: 12px 15px; text-align: left; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; color: var(--dark); }
+        .option-btn:hover:not(:disabled) { border-color: var(--primary); background: #fef5e7; }
+        .option-btn.correct { background: #d4edda !important; border-color: var(--correct) !important; color: #155724; font-weight: bold; }
+        .option-btn.wrong { background: #f8d7da !important; border-color: var(--wrong) !important; color: #721c24; }
+
+        .select-option { width: 100%; padding: 12px; border: 2px solid #f9e79f; border-radius: 12px; background: var(--light); font-size: 1rem; color: var(--dark); margin-bottom: 15px; outline: none; }
+
+        .explanation-box { background: #ebf5fb; border-left: 5px solid var(--secondary); padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem; color: #1b4965; display: none; line-height: 1.4; }
+
+        /* Butang Utama */
+        .btn-main { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-size: 1rem; cursor: pointer; width: 100%; font-weight: bold; transition: background 0.2s; }
+        .btn-main:hover { background: #d35400; }
+        .btn-main:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Skrin Keputusan */
+        .result-screen { text-align: center; display: none; }
+        .score-circle { width: 120px; height: 120px; border-radius: 50%; background: var(--secondary); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; margin: 20px auto; flex-direction: column; }
+        .score-circle span { font-size: 0.8rem; font-weight: normal; }
+
+        /* Papan Skor */
+        .leaderboard-box { margin-top: 25px; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 12px; max-height: 200px; overflow-y: auto; }
+        .leaderboard-box h3 { margin-bottom: 10px; font-size: 1rem; color: var(--dark); border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        .leaderboard-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px dashed #eee; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-card">
+    <!-- Skrin Mula / Isi Nama -->
+    <div id="start-screen" class="start-screen">
+        <h1>Kuiz RBT Tingkatan 1</h1>
+        <p>Bab 2: Pengurusan Projek Reka Bentuk (50 Soalan)</p>
+        <div class="input-group">
+            <label for="player-name">Masukkan Nama Anda:</label>
+            <input type="text" id="player-name" placeholder="Contoh: Muhammad Ammar" autocomplete="off">
+        </div>
+        <button class="btn-main" onclick="startQuiz()">Mula Kuiz</button>
+    </div>
+
+    <!-- Skrin Utama Kuiz -->
+    <div id="quiz-screen" style="display: none;">
+        <div class="header-info">
+            <span id="player-display">Pemain: -</span>
+            <span class="timer" id="timer-display">⏱️ Masa: 45:00</span>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="header-info" style="margin-bottom: 10px;">
+            <span id="question-number">Soalan 1/50</span>
+            <span id="score-live">Markah: 0</span>
+        </div>
+
+        <div class="question-text" id="question-text">Teks soalan akan dipaparkan di sini...</div>
+
+        <!-- Pilihan Soalan Objektif -->
+        <div class="options-grid" id="options-container"></div>
+
+        <!-- Pilihan Soalan Subjektif / Dropdown -->
+        <div id="dropdown-container" style="display: none;">
+            <select id="dropdown-select" class="select-option">
+                <option value="">-- Pilih Jawapan Yang Betul --</option>
+            </select>
+        </div>
+
+        <div class="explanation-box" id="explanation-box"></div>
+
+        <button class="btn-main" id="next-btn" onclick="nextQuestion()" disabled>Seterusnya</button>
+    </div>
+
+    <!-- Skrin Keputusan & Leaderboard -->
+    <div id="result-screen" class="result-screen">
+        <h2>Tahniah! Kuiz Tamat</h2>
+        <p id="final-player-name" style="margin-top: 5px; color: #555;"></p>
+        
+        <div class="score-circle" id="score-circle">
+            <div id="final-score">0</div>
+            <span id="final-percentage">0%</span>
+        </div>
+
+        <p id="feedback-text" style="font-weight: bold; margin-bottom: 15px; color: var(--dark);"></p>
+
+        <button class="btn-main" onclick="location.reload()">Cuba Lagi</button>
+
+        <div class="leaderboard-box">
+            <h3>🏆 Papan Skor Kedudukan (Leaderboard)</h3>
+            <div id="leaderboard-list">Tiada rekod lagi.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Data Raw Soalan RBT Tingkatan 1 Bab 2 (30 Objektif + 20 Padanan/Subjektif)
+const rawQuestions = [
+    // 30 SOALAN OBJEKTIF (1 - 30)
+    { type: 'mcq', q: "1. Pengurusan projek reka bentuk merujuk kepada kaedah mengurus sumber seperti...", options: ["Aset premis dan Lesen", "Ilmu pengetahuan, kemahiran, dan teknik", "Penjualan saham dan Pelaburan", "Cukai dan Perlindungan lesen"], correctText: "Ilmu pengetahuan, kemahiran, dan teknik", exp: "Pengurusan projek merupakan kaedah mengurus sumber (ilmu pengetahuan, kemahiran, dan teknik) bagi memastikan matlamat projek tercapai." },
+    { type: 'mcq', q: "2. Antara berikut, yang manakah merupakan TIGA komponen utama dalam pengurusan projek?", options: ["Skop kerja, Tempoh masa, dan Kos projek", "Bahan, Alatan, dan Hasil", "Kualiti, Pembungkusan, dan Pemasaran", "Perancangan, Penyeliaan, dan Promosi"], correctText: "Skop kerja, Tempoh masa, dan Kos projek", exp: "Tiga komponen utama pengurusan projek ialah Skop Kerja, Tempoh Masa, dan Kos Projek." },
+    { type: 'mcq', q: "3. Skop kerja dalam pengurusan projek terdiri daripada...", options: ["Skop Lesen dan Skop Perniagaan", "Skop Produk dan Skop Projek", "Skop Bahan dan Skop Modal", "Skop Pembeli dan Skop Penjual"], correctText: "Skop Produk dan Skop Projek", exp: "Skop kerja merangkumi Skop Produk (kualiti/ciri) dan Skop Projek (aktiviti kerja)." },
+    { type: 'mcq', q: "4. Apakah yang dimaksudkan dengan 'Penjanaan Idea Reka Bentuk'?", options: ["Kaedah meminjam kewangan syarikat", "Kaedah mencari dan mencambah idea baru untuk menyelesaikan masalah", "Proses menjual produk di pasaran terbuka", "Proses menguji ketahanan fizikal produk"], correctText: "Kaedah mencari dan mencambah idea baru untuk menyelesaikan masalah", exp: "Penjanaan idea ialah proses mencari dan mencambah idea baru untuk menyelesaikan masalah reka bentuk." },
+    { type: 'mcq', q: "5. Mengubah fungsi produk contohnya menukar fungsi cawan menjadi pasu bunga tergolong dalam teknik...", options: ["Menterbalikkan fungsi", "Meniru persekitaran", "Menukar saiz objek", "Menukar warna produk"], correctText: "Menterbalikkan fungsi", exp: "Menterbalikkan fungsi bermaksud mengubah fungsi asal sesuatu produk kepada fungsi baharu." },
+    { type: 'mcq', q: "6. Apakah TIGA fasa utama dalam langkah pengurusan pelaksanaan projek?", options: ["Pemasaran, Jualan, Untung", "Perancangan, Penjadualan, dan Pengawalan", "Pembelian, Pembuatan, Pembungkusan", "Lakaran, Mock-up, Ujian"], correctText: "Perancangan, Penjadualan, dan Pengawalan", exp: "Tiga fasa pelaksanaan projek ialah Perancangan, Penjadualan, dan Pengawalan." },
+    { type: 'mcq', q: "7. Fasa 'Pengawalan' dalam pengurusan projek dilaksanakan bertujuan untuk mengawal...", options: ["Bilangan pekerja asing sahaja", "Sumber, kos, dan kualiti sepanjang projek", "Cukai pendapatan premis", "Harga barang pesaing di pasaran"], correctText: "Sumber, kos, dan kualiti sepanjang projek", exp: "Pengawalan dilakukan bagi memastikan sumber, kos, dan kualiti mematuhi rancangan asal." },
+    { type: 'mcq', q: "8. Apakah kegunaan 'Struktur Pecahan Kerja' (SPK / WBS - Work Breakdown Structure)?", options: ["Membahagikan tugas besar kepada tugas-tugas kecil yang mudah diurus", "Menghitung keuntungan syarikat", "Menulis surat perjanjian pelanggan", "Mengira kadar faedah bank"], correctText: "Membahagikan tugas besar kepada tugas-tugas kecil yang mudah diurus", exp: "SPK/WBS memecahkan skop kerja utama kepada bahagian tugas kecil yang lebih sistematik." },
+    { type: 'mcq', q: "9. Penggunaan alat penjadualan seperti 'Carta Gantt' penting untuk...", options: ["Melihat perkembangan kerja mengikut minggu atau masa", "Membeli stok bahan mentah murah", "Melukis lakaran 3D produk", "Memilih warna logo syarikat"], correctText: "Melihat perkembangan kerja mengikut minggu atau masa", exp: "Carta Gantt ialah carta bar yang menunjukkan susunan jadual aktiviti mengikut tempoh masa/minggu." },
+    { type: 'mcq', q: "10. Apakah kelebihan utama menyediakan penjadualan projek yang baik?", options: ["Mengelakkan pembaziran masa dan kos", "Menghapus keperluan penyelia projek", "Membenarkan pekerja bekerja tanpa had masa", "Mengurangkan kualiti produk"], correctText: "Mengelakkan pembaziran masa dan kos", exp: "Penjadualan mengelakkan pembaziran masa dan kos serta memastikan bahan diurus dengan baik." },
+    { type: 'mcq', q: "11. Penyediaan anggaran kos projek biasanya merangkumi tiga elemen utama iaitu...", options: ["Kos bahan, kos upah, dan kos overhead", "Kos lesen, kos cukai, dan kos sewa", "Kos iklan, kos kenderaan, dan kos komisen", "Kos pejabat, kos mesin, dan kos bahan api"], correctText: "Kos bahan, kos upah, dan kos overhead", exp: "Anggaran kos projek dikira berdasarkan Kos Bahan + Kos Upah + Kos Overhead." },
+    { type: 'mcq', q: "12. Dalam konsep S.M.A.R.T, huruf 'S' mewakili...", options: ["Simple (Mudah)", "Specific (Spesifik / Tujuan jelas)", "Standard (Piawai)", "Secret (Rahsia)"], correctText: "Specific (Spesifik / Tujuan jelas)", exp: "S = Specific (Penetapan tujuan projek secara khusus dan jelas)." },
+    { type: 'mcq', q: "13. Dalam konsep S.M.A.R.T, huruf 'M' mewakili...", options: ["Measurable (Boleh diukur)", "Maximum (Maksimum)", "Material (Bahan)", "Market (Pasaran)"], correctText: "Measurable (Boleh diukur)", exp: "M = Measurable (Pencapaian projek dan kos boleh diukur secara kuantitatif)." },
+    { type: 'mcq', q: "14. Dalam konsep S.M.A.R.T, huruf 'A' mewakili...", options: ["Action (Tindakan)", "Attainable (Boleh dicapai)", "Actual (Sebenar)", "Accuracy (Ketepatan)"], correctText: "Attainable (Boleh dicapai)", exp: "A = Attainable (Projek dan bajet yang dirancang boleh dicapai berdasarkan sumber)." },
+    { type: 'mcq', q: "15. Dalam konsep S.M.A.R.T, huruf 'R' mewakili...", options: ["Rapid (Pantas)", "Realistic (Realistik / Masuk akal)", "Review (Semakan)", "Resource (Sumber)"], correctText: "Realistic (Realistik / Masuk akal)", exp: "R = Realistic (Projek yang munasabah dan tidak mustahil dilaksanakan)." },
+    { type: 'mcq', q: "16. Dalam konsep S.M.A.R.T, huruf 'T' mewakili...", options: ["Total (Jumlah)", "Time-bound (Masa ditetapkan)", "Testing (Ujian)", "Technical (Teknikal)"], correctText: "Time-bound (Masa ditetapkan)", exp: "T = Time-bound (Mempunyai sasaran tempoh masa dan garis masa yang ditetapkan)." },
+    { type: 'mcq', q: "17. Bilakah pembentukan kumpulan kerja perlu dilaksanakan?", options: ["Semasa perancangan dan pembahagian tugas projek", "Selepas produk siap dijual", "Selepas perniagaan ditutup", "Semasa membayar cukai syarikat"], correctText: "Semasa perancangan dan pembahagian tugas projek", exp: "Kumpulan kerja dibentuk awal untuk mengagihkan peranan serta tanggungjawab mengikut kepakaran." },
+    { type: 'mcq', q: "18. Individu yang bertaraf ketua dan bertanggungjawab keseluruhan terhadap kejayaan projek dinamakan...", options: ["Pengurus Projek", "Pereka Bahan", "Penyelia Tapak Manual", "Operator Mesin"], correctText: "Pengurus Projek", exp: "Pengurus Projek mengetuai pelaksanaan projek dan mengawal sumber serta tempoh masa." },
+    { type: 'mcq', q: "19. Apakah contoh 'Kos Overhead' dalam perbelanjaan projek?", options: ["Sewa kilang, bil elektrik dan bil air", "Pembelian kayu dan paku", "Bayaran gaji pekerja harian", "Pembelian bahan mentah asas"], correctText: "Sewa kilang, bil elektrik dan bil air", exp: "Kos overhead ialah kos sampingan/sampingan operasi seperti bil utiliti, sewa, dan telefon." },
+    { type: 'mcq', q: "20. Teknik penjanaan idea dengan melihat pemandangan alam semula jadi dinamakan...", options: ["Meniru apa yang dilihat di sekeliling (Mimikri/Biomimikri)", "Menukar saiz produk", "Menterbalikkan fungsi", "Menggabungkan bahan berbeza"], correctText: "Meniru apa yang dilihat di sekeliling (Mimikri/Biomimikri)", exp: "Teknik meniru persekitaran mengambil inspirasi bentuk atau fungsi daripada alam semula jadi." },
+    { type: 'mcq', q: "21. Apakah alat penjadualan yang menggambarkan rangkaian hubungan antara aktiviti projek?", options: ["Blok Hubungan Aktiviti", "Borang Brief", "Lakaran 2D", "Daftar Cukai"], correctText: "Blok Hubungan Aktiviti", exp: "Blok Hubungan Aktiviti menunjukkan urutan dan pertalian antara satu aktiviti dengan aktiviti yang lain." },
+    { type: 'mcq', q: "22. Rumus bagi mengira 'Kos Pengeluaran' sesuatu produk ialah...", options: ["Kos Bahan + Kos Upah + Kos Overhead", "Kos Bahan sahaja", "Kos Upah × Bilangan Jam", "Kos Overhead − Kos Upah"], correctText: "Kos Bahan + Kos Upah + Kos Overhead", exp: "Jumlah Kos Pengeluaran = Kos Bahan + Kos Upah + Kos Overhead." },
+    { type: 'mcq', q: "23. Sekiranya masa projek melepasi tempoh yang ditetapkan, apakah rintangan utama yang berlaku?", options: ["Peningkatan kos dan kelewatan penyerahan projek", "Kualiti produk meningkat automatik", "Jumlah keuntungan meningkat dua kali ganda", "Kos upah menjadi percuma"], correctText: "Peningkatan kos dan kelewatan penyerahan projek", exp: "Kelewatan tempoh masa akan meningkatkan kos overhead dan kos upah pekerja." },
+    { type: 'mcq', q: "24. Fasa manakah yang melibatkan penentuan aktiviti dan susunan garis masa?", options: ["Penjadualan", "Perancangan awal", "Penjualan", "Pemasaran"], correctText: "Penjadualan", exp: "Fasa penjadualan menetapkan garis masa dan urutan langkah kerja." },
+    { type: 'mcq', q: "25. Contoh penjanaan idea secara 'Menukar Saiz' ialah...", options: ["Mengecilkan saiz pemutar skru menjadi saiz poket", "Menukar warna telefon bimbit", "Menggunakan bekas plastik sebagai tempat simpanan", "Menaikkan harga jualan"], correctText: "Mengecilkan saiz pemutar skru menjadi saiz poket", exp: "Menukar saiz melibatkan tindakan membesar, mengecil, atau memanjangkan saiz asal produk." },
+    { type: 'mcq', q: "26. Pengurus projek perlu memastikan ahli kumpulan bekerja secara harmonis melalui...", options: ["Komunikasi efektif dan pembahagian tugas yang jelas", "Mengarahkan semua ahli membuat kerja yang sama", "Membiarkan ahli bekerja tanpa arahan", "Menetapkan jadual tanpa perbincangan"], correctText: "Komunikasi efektif dan pembahagian tugas yang jelas", exp: "Pembahagian tugas dan komunikasi yang berkesan merupakan kunci kejayaan kumpulan kerja." },
+    { type: 'mcq', q: "27. Mengapakah kualiti produk perlu dipantau semasa fasa 'Pengawalan'?", options: ["Memastikan produk memenuhi spesifikasi piawai yang ditetapkan", "Menjadikan produk sukar digunakan", "Memastikan kos perbelanjaan bertambah", "Mengurangkan saiz pembungkusan"], correctText: "Memastikan produk memenuhi spesifikasi piawai yang ditetapkan", exp: "Pengawalan kualiti mengelakkan kecacatan produk sebelum diserahkan kepada pengguna." },
+    { type: 'mcq', q: "28. Apakah maksud 'Kos Upah'?", options: ["Bayaran tenaga kerja yang terlibat membina produk", "Bayaran bil elektrik bulanan", "Harga bahan mentah mentah kayu", "Cukai pintu PBT"], correctText: "Bayaran tenaga kerja yang terlibat membina produk", exp: "Kos upah mengira bayaran mengikut jam/hari kepada pekerja yang menghasilkan produk." },
+    { type: 'mcq', q: "29. Menggabungkan dua fungsi seperti 'Pen dengan Pemacu Kilat (Pen Drive)' tergolong dalam teknik...", options: ["Menggabungkan fungsi produk", "Menukar saiz produk", "Meniru persekitaran", "Menterbalikkan saiz"], correctText: "Menggabungkan fungsi produk", exp: "Menggabungkan fungsi memadankan dua peranti berbeza menjadi satu produk berbilang fungsi." },
+    { type: 'mcq', q: "30. Penentuan bajet menggunakan kaedah S.M.A.R.T. bertujuan untuk...", options: ["Memastikan penetapan anggaran kos secara realistik dan boleh diukur", "Mengurangkan bilangan pembeli", "Memanjangkan proses pembuatan tanpa had", "Menaikkan kos overhead"], correctText: "Memastikan penetapan anggaran kos secara realistik dan boleh diukur", exp: "S.M.A.R.T. memastikan perancangan bajet berfokus, munasabah, dan mempunyai sasaran jelas." },
+
+    // 20 SOALAN SUBJEKTIF / PADANAN (31 - 50)
+    { type: 'select', q: "31. [Padanan Subjektif] Kaedah mengurus sumber untuk mencapai matlamat projek dinamakan...", options: ["Pengurusan Projek Reka Bentuk", "Pemasaran Produk", "Lakaran Hiasan", "Cukai Perniagaan"], correctText: "Pengurusan Projek Reka Bentuk", exp: "Definisi pengurusan projek ialah mengurus sumber bagi memastikan matlamat projek tercapai." },
+    { type: 'select', q: "32. [Padanan Subjektif] Komponen 'Skop Kerja, Tempoh Masa, dan Kos Projek' tergolong dalam...", options: ["Tiga Komponen Utama Pengurusan Projek", "Elemen Prinsip Seni Grafik", "Langkah Pemasaran Pasaran", "Jenis-jenis Litar"], correctText: "Tiga Komponen Utama Pengurusan Projek", exp: "Ini merupakan 3 komponen asas dalam pengurusan projek." },
+    { type: 'select', q: "33. [Padanan Subjektif] Teknik mencambah idea dengan meniru bentuk haiwan dinamakan...", options: ["Meniru apa yang dilihat di sekeliling", "Menukar saiz", "Menterbalikkan fungsi", "Menggabungkan fungsi"], correctText: "Meniru apa yang dilihat di sekeliling", exp: "Meniru alam semula jadi (mimikri) menggunakan inspirasi sekeliling." },
+    { type: 'select', q: "34. [Padanan Subjektif] Fasa menentukan aktiviti dan susunan masa projek dinamakan...", options: ["Penjadualan", "Perancangan", "Pengawalan", "Penjualan"], correctText: "Penjadualan", exp: "Fasa Penjadualan menentukan urutan aktiviti kerja dan masa." },
+    { type: 'select', q: "35. [Padanan Subjektif] Fasa memantau sumber, kos, dan kualiti dinamakan...", options: ["Pengawalan", "Perancangan", "Penjadualan", "Pembungkusan"], correctText: "Pengawalan", exp: "Pengawalan memastikan perjalanan projek mengikut garis panduan." },
+    { type: 'select', q: "36. [Padanan Subjektif] Singkatan SPK atau WBS merujuk kepada...", options: ["Struktur Pecahan Kerja (Work Breakdown Structure)", "Sistem Penilaian Kos", "Standard Pembuatan Kualiti", "Skop Perancangan Kelompok"], correctText: "Struktur Pecahan Kerja (Work Breakdown Structure)", exp: "SPK / WBS membahagikan tugas besar kepada komponen tugas kecil." },
+    { type: 'select', q: "37. [Padanan Subjektif] Alat penjadualan berasaskan carta bar mengikut masa/minggu dinamakan...", options: ["Carta Gantt", "Blok Hubungan Aktiviti", "Rajah Venn", "Graf Pokok"], correctText: "Carta Gantt", exp: "Carta Gantt memaparkan kemajuan tempoh masa projek secara visual." },
+    { type: 'select', q: "38. [Padanan Subjektif] S.M.A.R.T: Huruf 'S' bermaksud...", options: ["Specific (Spesifik)", "Simple", "Standard", "Security"], correctText: "Specific (Spesifik)", exp: "Specific = Tujuan dan sasaran projek ditetapkan secara jelas." },
+    { type: 'select', q: "39. [Padanan Subjektif] S.M.A.R.T: Huruf 'M' bermaksud...", options: ["Measurable (Boleh diukur)", "Maximum", "Material", "Marketing"], correctText: "Measurable (Boleh diukur)", exp: "Measurable = Sasaran projek dan bajet kos boleh diukur." },
+    { type: 'select', q: "40. [Padanan Subjektif] S.M.A.R.T: Huruf 'A' bermaksud...", options: ["Attainable (Boleh dicapai)", "Action", "Accurate", "Automatic"], correctText: "Attainable (Boleh dicapai)", exp: "Attainable = Objektif projek projek mampu dicapai." },
+    { type: 'select', q: "41. [Padanan Subjektif] S.M.A.R.T: Huruf 'R' bermaksud...", options: ["Realistic (Realistik / Masuk akal)", "Rapid", "Review", "Research"], correctText: "Realistic (Realistik / Masuk akal)", exp: "Realistic = Projek munasabah berasaskan keupayaan." },
+    { type: 'select', q: "42. [Padanan Subjektif] S.M.A.R.T: Huruf 'T' bermaksud...", options: ["Time-bound (Masa ditetapkan)", "Total", "Testing", "Technical"], correctText: "Time-bound (Masa ditetapkan)", exp: "Time-bound = Mempunyai tempoh garis masa siap yang jelas." },
+    { type: 'select', q: "43. [Padanan Subjektif] Pembelian bahan mentah seperti kayu, paku, dan cat tergolong dalam...", options: ["Kos Bahan", "Kos Upah", "Kos Overhead", "Kos Lesen"], correctText: "Kos Bahan", exp: "Kos Bahan ialah perbelanjaan fizikal barangan pembinaan produk." },
+    { type: 'select', q: "44. [Padanan Subjektif] Bayaran gaji mengikut jam kerja pekerja dinamakan...", options: ["Kos Upah", "Kos Bahan", "Kos Overhead", "Kos Sampingan"], correctText: "Kos Upah", exp: "Kos upah = Bilangan pekerja × Bilangan jam × Kadar upah sejam." },
+    { type: 'select', q: "45. [Padanan Subjektif] Bil air, bil elektrik, dan sewa premis tergolong di bawah...", options: ["Kos Overhead", "Kos Bahan", "Kos Upah", "Kos Cukai"], correctText: "Kos Overhead", exp: "Kos overhead ialah perbelanjaan tidak langsung operasi projek." },
+    { type: 'select', q: "46. [Padanan Subjektif] Individu yang memimpin dan mengurus pelaksanaan kumpulan kerja dinamakan...", options: ["Pengurus Projek", "Pembekal Bahan", "Pereka Grafik", "Penguji Produk"], correctText: "Pengurus Projek", exp: "Pengurus Projek memimpin dan mengawal perjalanan keseluruhan projek." },
+    { type: 'select', q: "47. [Padanan Subjektif] Teknik menukarkan lampu suluh menjadi bentuk pemutar skru bersaiz kecil dinamakan...", options: ["Menukar saiz / Menggabungkan fungsi", "Menterbalikkan warna", "Membeli produk siap", "Mengurangkan kualiti"], correctText: "Menukar saiz / Menggabungkan fungsi", exp: "Ubah saiz dan gabung fungsi menambah variasi kegunaan produk." },
+    { type: 'select', q: "48. [Padanan Subjektif] Alat penjadualan yang menunjukkan susunan rangkaian kerja dinamakan...", options: ["Blok Hubungan Aktiviti", "Carta Pie", "Borang Soal Selidik", "Resit Pembelian"], correctText: "Blok Hubungan Aktiviti", exp: "Blok Hubungan Aktiviti memaparkan aliran berantai sesebuah aktiviti." },
+    { type: 'select', q: "49. [Padanan Subjektif] Fasa pertama dalam pengurusan pelaksanaan projek dinamakan...", options: ["Perancangan", "Penjadualan", "Pengawalan", "Penilaian"], correctText: "Perancangan", exp: "Perancangan ialah fasa awal merangka skop, kos, dan tempoh masa." },
+    { type: 'select', q: "50. [Padanan Subjektif] Tujuan melantik ahli kumpulan mengikut peranan masing-masing ialah...", options: ["Memastikan tugas dilaksanakan mengikut kepakaran secara sistematik", "Membiarkan seorang sahaja bekerja", "Menambah kos perbelanjaan gaji", "Mengelakkan projek disiapkan"], correctText: "Memastikan tugas dilaksanakan mengikut kepakaran secara sistematik", exp: "Kumpulan kerja yang cekap mengagihkan tugas berdasarkan kemahiran ahli." }
+];
+
+// Fungsi Rawak Array (Fisher-Yates Shuffle)
+function shuffleArray(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// Proses rawakkan pilihan jawapan bagi setiap soalan
+const questions = rawQuestions.map(q => {
+    let shuffledOpts = shuffleArray(q.options);
+    let correctIdx = shuffledOpts.indexOf(q.correctText);
+    return {
+        type: q.type,
+        q: q.q,
+        options: shuffledOpts,
+        ans: q.type === 'mcq' ? correctIdx : q.correctText,
+        exp: q.exp
+    };
+});
+
+// Pembolehubah Global
+let currentQIndex = 0;
+let score = 0;
+let playerName = "";
+let timerInterval;
+let timeLeft = 45 * 60; // 45 Minit dalam saat
+let selectedAnswer = null;
+
+// Fungsi Mula Kuiz
+function startQuiz() {
+    const nameInput = document.getElementById('player-name').value.trim();
+    if (!nameInput) {
+        alert("Sila masukkan nama anda terlebih dahulu!");
+        return;
+    }
+    playerName = nameInput;
+    document.getElementById('player-display').innerText = "Pemain: " + playerName;
+
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+
+    startTimer();
+    loadQuestion();
+}
+
+// Fungsi Pemasa (Timer)
+function startTimer() {
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        document.getElementById('timer-display').innerText = `⏱️ Masa: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("Masa telah tamat!");
+            finishQuiz();
+        }
+    }, 1000);
+}
+
+// Memuatkan Soalan
+function loadQuestion() {
+    selectedAnswer = null;
+    const qData = questions[currentQIndex];
+
+    // Kemaskini UI Header & Progress
+    document.getElementById('question-number').innerText = `Soalan ${currentQIndex + 1}/${questions.length}`;
+    document.getElementById('progress-bar').style.width = `${((currentQIndex + 1) / questions.length) * 100}%`;
+    document.getElementById('question-text').innerText = qData.q;
+    document.getElementById('explanation-box').style.display = 'none';
+    document.getElementById('next-btn').disabled = true;
+
+    const optContainer = document.getElementById('options-container');
+    const dropContainer = document.getElementById('dropdown-container');
+    const dropSelect = document.getElementById('dropdown-select');
+
+    optContainer.innerHTML = '';
+    dropSelect.innerHTML = '<option value="">-- Pilih Jawapan Yang Betul --</option>';
+    dropSelect.disabled = false;
+
+    if (qData.type === 'mcq') {
+        optContainer.style.display = 'grid';
+        dropContainer.style.display = 'none';
+
+        qData.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
+            btn.onclick = () => checkMCQ(idx, btn);
+            optContainer.appendChild(btn);
+        });
+    } else if (qData.type === 'select') {
+        optContainer.style.display = 'none';
+        dropContainer.style.display = 'block';
+
+        let opts = [...qData.options];
+        opts.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt;
+            el.innerText = opt;
+            dropSelect.appendChild(el);
+        });
+
+        dropSelect.onchange = () => checkSelect(dropSelect.value);
+    }
+}
+
+// Semak Jawapan Objektif (MCQ)
+function checkMCQ(selectedIndex, btnElement) {
+    if (selectedAnswer !== null) return;
+    selectedAnswer = selectedIndex;
+
+    const qData = questions[currentQIndex];
+    const buttons = document.querySelectorAll('.option-btn');
+
+    if (selectedIndex === qData.ans) {
+        btnElement.classList.add('correct');
+        score += 2; // 2 markah setiap soalan (Jumlah: 100 markah)
+    } else {
+        btnElement.classList.add('wrong');
+        buttons[qData.ans].classList.add('correct');
+    }
+
+    buttons.forEach(b => b.disabled = true);
+    document.getElementById('score-live').innerText = `Markah: ${score}`;
+
+    const expBox = document.getElementById('explanation-box');
+    expBox.innerHTML = `<strong>Penerangan:</strong> ${qData.exp}`;
+    expBox.style.display = 'block';
+
+    document.getElementById('next-btn').disabled = false;
+}
+
+// Semak Jawapan Subjektif/Dropdown
+function checkSelect(selectedValue) {
+    if (!selectedValue || selectedAnswer !== null) {
+        return;
+    }
+
+    const qData = questions[currentQIndex];
+    selectedAnswer = selectedValue;
+
+    const dropSelect = document.getElementById('dropdown-select');
+    dropSelect.disabled = true;
+
+    const expBox = document.getElementById('explanation-box');
+    if (selectedValue === qData.ans) {
+        expBox.innerHTML = `<span style="color: var(--correct); font-weight:bold;">✔ Jawapan Betul!</span><br><strong>Penerangan:</strong> ${qData.exp}`;
+        score += 2;
+    } else {
+        expBox.innerHTML = `<span style="color: var(--wrong); font-weight:bold;">✖ Jawapan Kurang Tepat. Jawapan betul: ${qData.ans}</span><br><strong>Penerangan:</strong> ${qData.exp}`;
+    }
+
+    document.getElementById('score-live').innerText = `Markah: ${score}`;
+    expBox.style.display = 'block';
+    document.getElementById('next-btn').disabled = false;
+}
+
+// Beralih ke soalan seterusnya
+function nextQuestion() {
+    currentQIndex++;
+    if (currentQIndex < questions.length) {
+        loadQuestion();
+    } else {
+        finishQuiz();
+    }
+}
+
+// Tamatkan Kuiz & Simpan Rekod
+function finishQuiz() {
+    clearInterval(timerInterval);
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+
+    document.getElementById('final-player-name').innerText = `Pemain: ${playerName}`;
+    document.getElementById('final-score').innerText = score;
+    document.getElementById('final-percentage').innerText = `${score}%`;
+
+    const feedback = document.getElementById('feedback-text');
+    if (score >= 80) {
+        feedback.innerText = "Cemerlang! Anda sangat menguasai Bab 2 Pengurusan Projek Reka Bentuk!";
+        feedback.style.color = "var(--correct)";
+    } else if (score >= 50) {
+        feedback.innerText = "Syabas! Keputusan yang baik, tingkatkan usaha lagi.";
+        feedback.style.color = "var(--primary)";
+    } else {
+        feedback.innerText = "Boleh cuba lagi untuk memantapkan pemahaman anda!";
+        feedback.style.color = "var(--wrong)";
+    }
+
+    saveToLeaderboard(playerName, score);
+    displayLeaderboard();
+}
+
+// Simpan ke localStorage
+function saveToLeaderboard(name, scoreVal) {
+    let leaderboard = JSON.parse(localStorage.getItem('rbt_t1_bab2_leaderboard')) || [];
+    leaderboard.push({ name: name, score: scoreVal, date: new Date().toLocaleDateString() });
+    
+    leaderboard.sort((a, b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0, 10);
+    localStorage.setItem('rbt_t1_bab2_leaderboard', JSON.stringify(leaderboard));
+}
+
+// Paparkan Leaderboard
+function displayLeaderboard() {
+    let leaderboard = JSON.parse(localStorage.getItem('rbt_t1_bab2_leaderboard')) || [];
+    const container = document.getElementById('leaderboard-list');
+
+    if (leaderboard.length === 0) {
+        container.innerHTML = "Tiada rekod lagi.";
+        return;
+    }
+
+    container.innerHTML = leaderboard.map((item, index) => `
+        <div class="leaderboard-item">
+            <span><strong>#${index + 1} ${item.name}</strong></span>
+            <span>${item.score} / 100 Markah (${item.date})</span>
+        </div>
+    `).join('');
+}
+</script>
+
+</body>
+</html>
